@@ -23,22 +23,26 @@ namespace TTT
         const int SIZE = 9;
         Button[,] buttons = new Button[SIZE,SIZE];
         Label[] labels = new Label[SIZE];
-        bool[] tabOfNextMove = { true, true, true, true, true, true, true, true, true };
         bool isXTurn = true;
+        bool isLowGame = false;
+        bool isHighGame = false;
         SolidColorBrush white, red;
         public MainWindow()
         {
             InitializeComponent();
             white = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
             red = new SolidColorBrush(System.Windows.Media.Color.FromRgb(249, 182, 182));
-          
+
         }
 
         private void twoPlayerStartButton_Click(object sender, RoutedEventArgs e)
         {
+            isLowGame = false;
+            isHighGame = false;
             SetButtonsTable();
             SetLabelTable();
-            TwoPlayerGameStart();
+            TwoPlayerGameMove();
+            ResetBoard();
         } //done
 
         private void SetLabelTable()
@@ -148,9 +152,9 @@ namespace TTT
 
         } //done
 
-        private void TwoPlayerGameStart()
+        private void TwoPlayerGameMove()
         {
-            ResetBoard();
+            
             if (isXTurn)
             {
                 WhichPlayerTurnLabel.Content = "Tura gracza X";
@@ -159,14 +163,11 @@ namespace TTT
             {
                 WhichPlayerTurnLabel.Content = "Tura gracza O";
             }
-            LightButtons(tabOfNextMove, buttons);
+            LightButtons();
 
-            //Tutaj określenie następnego ruchu możliwego czyli na nowo zdefiniować tabele tabOfNextMove
-
-            //DarkButtons(buttons);
         }
 
-        private void DarkButtons(Button[,] buttons)
+        private void DarkButtons()
         {
             for (int i = 0; i < SIZE; i++)
             {
@@ -177,17 +178,16 @@ namespace TTT
             }
         } //done
 
-        private void LightButtons(bool[] tabOfNextMove, Button[,] buttons)
+        private void LightButtons()
         {
             for(int i = 0; i<SIZE; i++)
             { 
-                if (tabOfNextMove[i])
-                {
+                
                     for(int j = 0; j<SIZE;j++)
                     {
                         buttons[i,j].Background = red;
                     }
-                }
+                
                 
             }
         }  //Done
@@ -200,27 +200,75 @@ namespace TTT
             {
                 big--;
                 small--;
-                if (tabOfNextMove[big])
-                {
-                    //Postawić potem ładny wyjątek że gra nie została rozpoczęta
-                    if (buttons[big,small].Content.ToString()!="X" && buttons[big, small].Content.ToString() != "O")  
+                
+                    try
                     {
-                        SetThisSign(big,small);
+                        if (buttons[big,small].Content.ToString()!="X" && buttons[big, small].Content.ToString() != "O")  
+                        {
+                            SetThisSign(big,small);
+                            DarkButtons();
+                            LightButtonsAfterTurn(small);
+                            if (isLowGame)
+                            {
+                                small = OneLowPlayerGameMove();
+                                DarkButtons();
+                                LightButtonsAfterTurn(small);
+                            }
+                            if (isHighGame)
+                            {
+                                small = OneHighPlayerGameMove();
+                                DarkButtons();
+                                LightButtonsAfterTurn(small);
+                            }
+
+
                     }
-                    else
+                        else
+                        {
+                            MessageBox.Show("To pole jest już zajęte.", "Błąd");
+                        }
+                    }catch (NullReferenceException)
                     {
-                        MessageBox.Show("To pole jest już zajęte.", "Błąd");
+                        MessageBox.Show("Gra nie została rozpoczęta");
                     }
-                }
-                else
-                {
-                    MessageBox.Show("podałeś niemożliwy do wykonania ruch, złą małą planszę wybrałeś");
-                }
+                
             }
             else
             {
                 MessageBox.Show("Możliwe, że wpsiałeś litere");
             }
+
+        }
+       
+        private void LightButtonsAfterTurn(int small)
+        {
+            if (labels[small].Content.ToString() != "X" && labels[small].Content.ToString() != "O")
+            {
+                for(int i = 0; i<SIZE; i++)
+                {
+                    if(buttons[small, i].Content.ToString() != "X" && buttons[small, i].Content.ToString() != "O")
+                    {
+                        buttons[small, i].Background = red;
+                    }
+                }
+            }
+            else
+            {
+                for(int i =0; i<SIZE; i++)
+                {
+                    if (labels[i].Content.ToString() != "X" && labels[i].Content.ToString() != "O")
+                    {
+                        for (int j = 0; j < SIZE; j++)
+                        {
+                            if (buttons[i, j].Content.ToString() != "X" && buttons[i, j].Content.ToString() != "O")
+                            {
+                                buttons[i, j].Background = red;
+                            }
+                        }
+                    }
+                }
+            }
+
         }
 
         private void ResetBoard()
@@ -232,12 +280,20 @@ namespace TTT
                     buttons[i, j].Content = (j + 1).ToString();
                 }
             }
-            //zresetować labele
-        } 
+            for(int i=0; i < SIZE; i++)
+            {
+                labels[i].Content = (i + 1).ToString();
+            }
+        } //done
 
         private void SetThisSign(int big, int small)
         {
             bool win = false;
+            if(buttons[big, small].Background != red)
+            {
+                MessageBox.Show("Nie możesz tu postawić, postaw w polach zaznaczonych na czerwono");
+                return;
+            }
             buttons[big, small].Content = isXTurn ? "X" : "O";
             if (CheckIsSmallWin(big))
             {
@@ -276,6 +332,198 @@ namespace TTT
             }
             return false;
         } //done
+
+        private void oneLowPlayerStartButton_Click(object sender, RoutedEventArgs e)
+        {
+            isLowGame = true;
+            isHighGame = false;
+            SetButtonsTable();
+            SetLabelTable();
+            ResetBoard();
+            OneLowPlayerGameMove();
+            
+        }
+
+        private int OneLowPlayerGameMove()
+        {
+            int[] si = { 0, 0 };
+            if (isXTurn)
+            {
+                WhichPlayerTurnLabel.Content = "Tura gracza X";
+            }
+            else
+            {
+                WhichPlayerTurnLabel.Content = "Tura gracza O";
+                si = LowLevelAI();
+                SetThisSign(si[0], si[1]);
+
+            }
+            LightButtons();
+            return si[1];
+        }
+        private int[] LowLevelAI()
+        {
+            int[] result = new int[2];
+            Random random = new Random();
+            do
+            {
+                result[0] = random.Next(0, 8);
+                result[1] = random.Next(0,8);
+            } while (buttons[result[0], result[1]].Background != red);
+
+            return result;
+        }
+        private int[] HighLevelAI()
+        {
+            int[] result = new int[2];
+            int small = -1;
+            int big = -1;
+            for(int i = 0; i < SIZE; i++)
+            {
+                if(labels[i].Content.ToString() == "O" || labels[i].Content.ToString() == "X")
+                {
+                    continue;
+                }
+                for(int j = 0; j< SIZE; j++)
+                {
+                    if(buttons[i,j].Background == red)
+                    {
+                        big = i;
+                        small = j;
+                        break;
+                    }
+                }
+                if (big != -1)
+                {
+                    break;
+                }
+            }
+            result[0] = big;
+            //zliczanie wolnych miejsc
+            int empty = 0;
+            for(int i = 0; i<SIZE; i++)
+            {
+                if(buttons[big,i].Background == red)
+                {
+                    empty++;
+                }
+            }
+            if(empty == 1)
+            {
+                result[1] = small;
+                return result;
+            }
+            if(buttons[big,0].Background == red)
+            {
+                result[1] = 0;
+                return result;
+            }
+            if(buttons[big, 0].Content.ToString() == "O")
+            {
+                if(buttons[big, 8].Background == red)
+                {
+                    result[1] = 8;
+                }
+                else
+                {
+                    if(buttons[big, 8].Content.ToString() == "O")
+                    {
+                        if (buttons[big, 4].Background == red)
+                        {
+                            result[1] = 4;
+                        }
+                        else
+                        {
+                            if (buttons[big, 2].Background == red)
+                            {
+                                result[1] = 2;
+                            }
+                            else
+                            {
+                                if (buttons[big, 2].Content.ToString() == "O")
+                                {
+                                    if (buttons[big, 1].Background == red)
+                                    {
+                                        result[1] = 1;
+                                    }
+                                    else
+                                    {
+                                        if (buttons[big, 5].Background == red)
+                                        {
+                                            result[1] = 5;
+                                        }
+                                        else
+                                        {
+                                            return LowLevelAI();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (buttons[big, 2].Background == red)
+                {
+                    result[1] = 2;
+                }
+                else
+                {
+                    if (buttons[big, 2].Content.ToString() == "O")
+                    {
+                        if (buttons[big, 1].Background == red)
+                        {
+                            result[1] = 1;
+                        }
+                        else
+                        {
+                            if (buttons[big, 5].Background == red)
+                            {
+                                result[1] = 5;
+                            }
+                            else
+                            {
+                                return LowLevelAI();
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
+            return result;
+        }
+
+        private void oneHighPlayerStartButton_Click(object sender, RoutedEventArgs e)
+        {
+            isLowGame = false;
+            isHighGame = true;
+            SetButtonsTable();
+            SetLabelTable();
+            ResetBoard();
+            OneHighPlayerGameMove();
+        }
+
+        private int OneHighPlayerGameMove()
+        {
+            int[] si = { 0, 0 };
+            if (isXTurn)
+            {
+                WhichPlayerTurnLabel.Content = "Tura gracza X";
+            }
+            else
+            {
+                WhichPlayerTurnLabel.Content = "Tura gracza O";
+                si = HighLevelAI();
+                SetThisSign(si[0], si[1]);
+
+            }
+            LightButtons();
+            return si[1];
+        }
 
         private bool CheckIsSmallWin(int big)
         {
