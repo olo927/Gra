@@ -26,13 +26,15 @@ namespace TTT
         bool isXTurn = true;
         bool isLowGame = false;
         bool isHighGame = false;
-        SolidColorBrush white, red;
+        bool isDark = false;
+        SolidColorBrush backcolor, red;
         public MainWindow()
         {
             InitializeComponent();
-            white = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
+            backcolor = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
             red = new SolidColorBrush(System.Windows.Media.Color.FromRgb(249, 182, 182));
-
+            SetButtonsTable();
+            SetLabelTable();
         }
 
         private void twoPlayerStartButton_Click(object sender, RoutedEventArgs e)
@@ -173,7 +175,7 @@ namespace TTT
             {
                 for (int j = 0; j < SIZE; j++)
                 {
-                    buttons[i, j].Background = white;
+                    buttons[i, j].Background = backcolor;
                 }
             }
         } //done
@@ -523,6 +525,57 @@ namespace TTT
             }
             LightButtons();
             return si[1];
+        }
+
+        private void Theme_Click(object sender, RoutedEventArgs e)
+        {
+
+            SolidColorBrush textcolor = null;
+            if(MessageBox.Show("Jeśli jesteś w trakcie rozgrywki to przestanie ona prawidłowo funkcjonować, czy napewno chcesz teraz zmienić tło? ", "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                if (isDark)
+                {
+                    textcolor = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0,0,0));
+                    backcolor = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255,255,255));
+                    red = new SolidColorBrush(System.Windows.Media.Color.FromRgb(249, 182, 182));
+                }
+                else
+                {
+                    textcolor = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
+                    backcolor = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0,0,0));
+                    red = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 0, 0));
+                }
+                App.Background = backcolor;
+                for (int i = 0; i < SIZE; i++)
+                {
+                    for (int j = 0; j < SIZE; j++)
+                    {
+                        buttons[i, j].Background = backcolor;
+                        buttons[i, j].Foreground = textcolor;
+                    }
+                    labels[i].Foreground = textcolor;
+                }
+                WhichPlayerTurnLabel.Foreground = textcolor;
+                BigPool.Foreground = textcolor;
+                SmallPool.Foreground = textcolor;
+                Big.Background = backcolor;
+                Small.Background = backcolor;
+                Theme.Background = backcolor;
+                twoPlayerStartButton.Background = backcolor;
+                oneLowPlayerStartButton.Background = backcolor;
+                oneHighPlayerStartButton.Background = backcolor;
+                Set.Background = backcolor;
+                Big.Foreground = textcolor;
+                Small.Foreground = textcolor;
+                Theme.Foreground = textcolor;
+                twoPlayerStartButton.Foreground = textcolor;
+                oneLowPlayerStartButton.Foreground =textcolor;
+                oneHighPlayerStartButton.Foreground = textcolor;
+                Set.Foreground = textcolor;
+                isDark = !isDark;
+            }
+            
+
         }
 
         private bool CheckIsSmallWin(int big)
