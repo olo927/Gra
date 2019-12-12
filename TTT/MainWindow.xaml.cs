@@ -45,6 +45,7 @@ namespace TTT
             SetLabelTable();
             TwoPlayerGameMove();
             ResetBoard();
+            LightButtons();
         } //done
 
         private void SetLabelTable()
@@ -165,7 +166,6 @@ namespace TTT
             {
                 WhichPlayerTurnLabel.Content = "Tura gracza O";
             }
-            LightButtons();
 
         }
 
@@ -200,16 +200,25 @@ namespace TTT
             int big, small;
             if(Int32.TryParse(Big.Text,out big) && Int32.TryParse(Small.Text, out small) && big>=1 && big<=9 && small >= 1 && small <= 9)
             {
-                big--;
+                big--; 
                 small--;
                 
                     try
                     {
                         if (buttons[big,small].Content.ToString()!="X" && buttons[big, small].Content.ToString() != "O")  
                         {
-                            SetThisSign(big,small);
+                            if (SetThisSign(big, small))
+                            {
+                                return;
+                            }
                             DarkButtons();
                             LightButtonsAfterTurn(small);
+                            if(!isLowGame && !isHighGame)
+                            {
+                                TwoPlayerGameMove();
+                            }
+                            
+
                             if (isLowGame)
                             {
                                 small = OneLowPlayerGameMove();
@@ -222,9 +231,7 @@ namespace TTT
                                 DarkButtons();
                                 LightButtonsAfterTurn(small);
                             }
-
-
-                    }
+                        }
                         else
                         {
                             MessageBox.Show("To pole jest już zajęte.", "Błąd");
@@ -237,14 +244,14 @@ namespace TTT
             }
             else
             {
-                MessageBox.Show("Możliwe, że wpsiałeś litere");
+                MessageBox.Show("Możliwe, że wpisałeś litere");
             }
 
         }
        
         private void LightButtonsAfterTurn(int small)
         {
-            if (labels[small].Content.ToString() != "X" && labels[small].Content.ToString() != "O")
+            if (labels[small].Content.ToString() != "X" && labels[small].Content.ToString() != "O" && labels[small].Content.ToString() != "=") //
             {
                 for(int i = 0; i<SIZE; i++)
                 {
@@ -256,9 +263,9 @@ namespace TTT
             }
             else
             {
-                for(int i =0; i<SIZE; i++)
+                for (int i = 0; i < SIZE; i++)
                 {
-                    if (labels[i].Content.ToString() != "X" && labels[i].Content.ToString() != "O")
+                    if (labels[i].Content.ToString() != "X" && labels[i].Content.ToString() != "O" && labels[small].Content.ToString() != "=")
                     {
                         for (int j = 0; j < SIZE; j++)
                         {
@@ -288,13 +295,13 @@ namespace TTT
             }
         } //done
 
-        private void SetThisSign(int big, int small)
+        private bool SetThisSign(int big, int small)
         {
             bool win = false;
             if(buttons[big, small].Background != red)
             {
                 MessageBox.Show("Nie możesz tu postawić, postaw w polach zaznaczonych na czerwono");
-                return;
+                return true;
             }
             buttons[big, small].Content = isXTurn ? "X" : "O";
             if (CheckIsSmallWin(big))
@@ -309,6 +316,7 @@ namespace TTT
             }
 
             isXTurn = !isXTurn;
+            return false;
             
         } //done 
 
@@ -355,7 +363,6 @@ namespace TTT
             }
             else
             {
-                WhichPlayerTurnLabel.Content = "Tura gracza O";
                 si = LowLevelAI();
                 SetThisSign(si[0], si[1]);
 
@@ -382,7 +389,7 @@ namespace TTT
             int big = -1;
             for(int i = 0; i < SIZE; i++)
             {
-                if(labels[i].Content.ToString() == "O" || labels[i].Content.ToString() == "X")
+                if(labels[i].Content.ToString() == "O" || labels[i].Content.ToString() == "X" || labels[i].Content.ToString() == "=")
                 {
                     continue;
                 }
@@ -417,7 +424,7 @@ namespace TTT
             }
             if(buttons[big,0].Background == red)
             {
-                result[1] = 0;
+                result[1] = 0; //
                 return result;
             }
             if(buttons[big, 0].Content.ToString() == "O")
@@ -475,15 +482,15 @@ namespace TTT
                 {
                     if (buttons[big, 2].Content.ToString() == "O")
                     {
-                        if (buttons[big, 1].Background == red)
+                        if (buttons[big, 6].Background == red)
                         {
-                            result[1] = 1;
+                            result[1] = 6;
                         }
                         else
                         {
-                            if (buttons[big, 5].Background == red)
+                            if (buttons[big, 4].Background == red)
                             {
-                                result[1] = 5;
+                                result[1] = 4;
                             }
                             else
                             {
@@ -518,7 +525,6 @@ namespace TTT
             }
             else
             {
-                WhichPlayerTurnLabel.Content = "Tura gracza O";
                 si = HighLevelAI();
                 SetThisSign(si[0], si[1]);
 
@@ -572,7 +578,7 @@ namespace TTT
                 oneLowPlayerStartButton.Foreground =textcolor;
                 oneHighPlayerStartButton.Foreground = textcolor;
                 Set.Foreground = textcolor;
-                isDark = !isDark;
+                isDark = !isDark; 
             }
             
 
@@ -597,6 +603,22 @@ namespace TTT
                buttons[big, 2].Content.ToString() == sign && buttons[big, 2].Content.ToString() == buttons[big, 4].Content.ToString() && buttons[big, 2].Content.ToString() == buttons[big, 6].Content.ToString())
             { // Sprawdzanie lini diagonalnych
                 return true;
+            }
+            int signs = 0;
+            for(int i =0; i<SIZE; i++)
+            {
+                if(buttons[big, i].Content.ToString() == "O" || buttons[big, i].Content.ToString() == "X")
+                {
+                    signs++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if(signs == SIZE)
+            {
+                labels[big].Content = "=";
             }
             return false;
         } //done
