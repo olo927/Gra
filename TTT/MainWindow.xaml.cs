@@ -422,6 +422,15 @@ namespace TTT
                 result[1] = small;
                 return result;
             }
+            //kod sprawdzający czy jest możliwość wygrania
+            int canWin = CheckAICanWin(big);
+            if(canWin != -1)
+            {
+                result[1] = canWin;
+                return result;
+            }
+
+
             if(buttons[big,0].Background == red)
             {
                 result[1] = 0; //
@@ -504,6 +513,67 @@ namespace TTT
 
 
             return result;
+        }
+
+        private int CheckAICanWin(int big)
+        {
+            string[] lines = new string[8];
+            lines[0] = buttons[big, 0].Content.ToString() + buttons[big, 1].Content.ToString() + buttons[big, 2].Content.ToString();
+            lines[1] = buttons[big, 3].Content.ToString() + buttons[big, 4].Content.ToString() + buttons[big, 5].Content.ToString();
+            lines[2] = buttons[big, 6].Content.ToString() + buttons[big, 7].Content.ToString() + buttons[big, 8].Content.ToString();
+            lines[3] = buttons[big, 0].Content.ToString() + buttons[big, 3].Content.ToString() + buttons[big, 6].Content.ToString();
+            lines[4] = buttons[big, 1].Content.ToString() + buttons[big, 4].Content.ToString() + buttons[big, 7].Content.ToString();
+            lines[5] = buttons[big, 2].Content.ToString() + buttons[big, 5].Content.ToString() + buttons[big, 8].Content.ToString();
+            lines[6] = buttons[big, 0].Content.ToString() + buttons[big, 4].Content.ToString() + buttons[big, 8].Content.ToString();
+            lines[7] = buttons[big, 2].Content.ToString() + buttons[big, 4].Content.ToString() + buttons[big, 6].Content.ToString();
+            int findLine = -1;
+            int check = -1;
+            for (int i = 0; i< 8; i++)
+            {
+                check = CheckLine(lines[i]);
+                if(check!= -1)
+                {
+                    findLine = i;
+                    break;
+                }
+            }
+
+            switch (findLine)
+            {
+                case 0:
+                    return check;
+                case 1:
+                    return check+3;
+                case 2:
+                    return check+6;
+                case 3:
+                    return check*3;
+                case 4:
+                    return check*3+1;
+                case 5:
+                    return check*3 + 2;
+                case 6:
+                    return check * 4;
+                case 7:
+                    return check * 2 + 2;
+                default:
+                    return -1;
+            }
+        }
+
+        private int CheckLine(string line)
+        {
+            if (line.IndexOf("O") != line.LastIndexOf("O") && !line.Contains("X"))
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    if (Char.IsDigit(line[i]))
+                    {
+                        return i;
+                    }
+                }
+            }
+            return -1;
         }
 
         private void oneHighPlayerStartButton_Click(object sender, RoutedEventArgs e)
